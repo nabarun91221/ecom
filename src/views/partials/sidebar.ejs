@@ -1,0 +1,150 @@
+<aside class="col-lg-2 col-md-3 mb-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-funnel me-2"></i> Filters
+            </h5>
+
+            <form action="/web/products/filter" method="GET">
+
+                <!-- CATEGORY -->
+                <div class="mb-4">
+                    <h6 class="fw-semibold">Category</h6>
+
+                    <% categories.forEach(c=>{ %>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="category" value="<%=c%>">
+                        <label class="form-check-label"><%=c%></label>
+                    </div>
+                    <% }) %>
+
+
+                </div>
+
+                <!-- BRAND -->
+                <div class="mb-4">
+                    <h6 class="fw-semibold">Brand</h6>
+                    <% brands.forEach(brand => { %>
+                    <div class="form-check">
+
+                        <input class="form-check-input" type="checkbox" name="brand" value="<%=brand%>">
+                        <label class="form-check-label">
+                            <%=brand%>
+                        </label>
+
+                    </div>
+                    <% }) %>
+
+
+                </div>
+
+                <!-- PRICE RANGE -->
+                <div class="mb-4">
+                    <h6 class="fw-semibold">Price</h6>
+
+                    <div class="row g-2">
+                        <div class="col">
+                            <input type="number" name="minPrice" class="form-control" placeholder="Min" />
+                        </div>
+                        <div class="col">
+                            <input type="number" name="maxPrice" class="form-control" placeholder="Max" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SIZE -->
+                <div class="mb-4">
+                    <h6 class="fw-semibold">Size</h6>
+                    <% sizes.forEach(size => { %>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="size" value="<%= size %>">
+                        <label class="form-check-label"><%= size %></label>
+                    </div>
+                    <% }) %>
+                </div>
+
+                <!-- STATUS -->
+                <div class="mb-4">
+                    <h6 class="fw-semibold">Status</h6>
+
+                    <select class="form-select" name="status">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+
+                <!-- ACTIONS -->
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary" onclick="applyFilters()">
+                        Apply Filters
+                    </button>
+
+                    <a href="/web/products" class="btn btn-outline-secondary">
+                        Reset
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+        <form action="/web/products/recover" class="w-100" method="GET">
+            <button type="submit" class="btn btn-secondary btn-lr w-100">
+                <i class="bi bi-trash me-1"></i> Recover
+            </button>
+        </form>
+
+        <style>
+            /* Sidebar container (column) */
+            /* ===== SIDEBAR COLUMN ===== */
+            aside {
+                display: flex;
+                flex-direction: column;
+                align-self: stretch;
+                /* allow full height */
+                min-width: 270px;
+                /* cap width, don’t force */
+                width: 99%;
+            }
+
+            /* ===== SIDEBAR CARD ===== */
+            aside .card {
+                position: sticky;
+                top: 4.5rem;
+                /* navbar height */
+                height: calc(100vh - 4.5rem);
+                /* FULL viewport height */
+                border-radius: 12px;
+                overflow-y: auto;
+            }
+
+            /* ===== SIDEBAR HEADINGS ===== */
+            aside h6 {
+                font-size: 0.85rem;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+            }
+
+            /* ===== MAIN CONTENT ===== */
+            main {
+                flex: 1 1 auto;
+                /* take remaining space */
+                min-width: 0;
+                /* IMPORTANT: prevents overflow */
+                position: relative;
+                z-index: 1;
+            }
+
+            /* ===== MOBILE SAFETY ===== */
+            @media (max-width: 991px) {
+                aside {
+                    max-width: 100%;
+                }
+
+                aside .card {
+                    position: static;
+                    height: auto;
+                }
+            }
+        </style>
+</aside>
