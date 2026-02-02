@@ -18,6 +18,10 @@ const schema = new mongoose.Schema(
     stock: { type: Number, required: true },
     color: { type: String, required: true },
     status: { type: String, enum: PRODUCT_STATUS, default: "active" },
+    images: {
+      type: [String],
+      default:"https://res.cloudinary.com/dm6sdxom1/image/upload/v1769963494/shirt_btgyhg.png"
+    },
     isDeleted: { type: Boolean, default: false },
 
     searchTokens: {
@@ -30,7 +34,7 @@ const schema = new mongoose.Schema(
 
 
 schema.pre("save", async function () {
-  const text = `${this.name || ""} ${this.desc || ""}`;
+  const text = this.name
   this.searchTokens = generateNgrams(text);
 });
 
@@ -39,8 +43,8 @@ schema.pre("findOneAndUpdate", async function () {
   const update = this.getUpdate();
   const data = update.$set || update;
 
-  if (data.name || data.desc) {
-    const text = `${data.name || ""} ${data.desc || ""}`;
+  if (data.name) {
+    const text = this.name;
     update.$set = {
       ...update.$set,
       searchTokens: generateNgrams(text)

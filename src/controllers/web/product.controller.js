@@ -38,8 +38,12 @@ export const renderProductFormToEdit = async(req, res) =>
   
 };
 
-export const submitProductForm = async(req,res) => {
-  const newProductPayload  = req.body;
+export const submitProductForm = async (req, res) =>
+{
+  console.log(req.files);
+  const images = req.files.map(f => f.path);
+  const newProductPayload = {...req.body,images}
+  
   try {
     await Product.create(newProductPayload );
     
@@ -62,8 +66,9 @@ export const submitProductForm = async(req,res) => {
 }
 export const updateProduct = async (req, res) =>
 {
+  const images = req.files.map(f => f.path);
   const productId = req.params.id;
-  const toBeUpdateProductPayload=req.body
+  const toBeUpdateProductPayload={...req.body,images}
   try {
     const updateProduct = await Product.findByIdAndUpdate(productId, toBeUpdateProductPayload)
     if (updateProduct) {

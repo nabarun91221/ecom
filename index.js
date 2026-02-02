@@ -23,6 +23,10 @@ app.get("/healthcheck", (req,res)=>{
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "src", "views"));
 app.use(express.static(path.join(__dirname, "public")));
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"))
+);
 
 (async () => {
   try {
@@ -45,6 +49,10 @@ app.use((req, res, next) => {
   res.locals.error = req.flash("error");
   next();
 });
+app.use((err, req, res, next) => {
+  console.error("GLOBAL ERROR:", err);
+  res.status(500).send(err.message);
+});
 
 // routes
 
@@ -54,5 +62,6 @@ app.use("/api", productRouter_api);
 app.listen(PORT,"0.0.0.0", () =>
 {
   console.log(`ENV:${process.env.NODE_ENV}`)
-  console.log("app is running on PORT:", PORT);
+  if (!process.env.NODE_ENV === "production") console.log("http://localhost:", PORT);
+  else console.log(`http://${process.env.VPS_IP}:${PORT}`)
 });
