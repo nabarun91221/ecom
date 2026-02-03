@@ -18,7 +18,7 @@ if (!fs.existsSync(uploadDir)) {
 }
 //File Filter
 const fileFilter = function (req, file, cb) {
-  if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+  if (!file.originalname.match(/\.(jpg|jpeg|png|gif|avif)$/)) {
     return cb(new Error('Only image files are allowed!'), false);
   }
   cb(null, true);
@@ -40,7 +40,7 @@ const storage_cloudinery= new CloudinaryStorage({
   cloudinary,
   params: {
     folder: "products",
-    allowed_formats: ["jpg", "png", "jpeg", "webp"],
+    allowed_formats: ["jpg", "png", "jpeg", "webp","avif"],
     transformation: [{ width: 800, crop: "limit" }],
   },
 });
