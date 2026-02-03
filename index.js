@@ -9,17 +9,14 @@ import session from "express-session";
 import flash from "connect-flash"
 import { options } from "./src/configs/session.config.js";
 import productModel from "./src/models/product.model.js";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 configDotenv();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const PORT = process.env.PORT || 3000;
 const app = express();
-app.get("/healthcheck", (req,res)=>{
-  res.send("OK")
-})
 
-// ✅ CORRECT CONFIG
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "src", "views"));
 app.use(express.static(path.join(__dirname, "public")));
@@ -55,13 +52,12 @@ app.use((err, req, res, next) => {
 });
 
 // routes
-
 app.use("/web", productRouter_web);
 app.use("/api", productRouter_api);
 
 app.listen(PORT,"0.0.0.0", () =>
 {
   console.log(`ENV:${process.env.NODE_ENV}`)
-  if (!process.env.NODE_ENV === "production") console.log("http://localhost:", PORT);
+  if (!process.env.NODE_ENV == "production") console.log("http://localhost:", PORT);
   else console.log(`http://${process.env.VPS_IP}:${PORT}`)
 });

@@ -1,6 +1,11 @@
 import { error } from "node:console";
 import { PRODUCT_CATEGORIES,PRODUCT_SIZES,PRODUCT_BRAND } from "../../constants/product.enums.js";
 import Product from "../../models/product.model.js";
+import cloudinary from "../../configs/clodinery.config.js";
+import { Parser } from "json2csv";
+import { createReadStream } from "fs";
+import { unlink } from "fs/promises";
+import csvParser from "csv-parser";
 export const renderProducts = async(req, res) =>
 {
   const sortType = req.query.sort;
@@ -41,7 +46,12 @@ export const renderProductFormToEdit = async(req, res) =>
 export const submitProductForm = async (req, res) =>
 {
   console.log(req.files);
-  const images = req.files.map(f => f.path);
+  const images = req.files.map(f =>
+  ({
+    url: f.path,
+    public_id: f.filename  
+   })
+  );
   const newProductPayload = {...req.body,images}
   
   try {
@@ -64,25 +74,44 @@ export const submitProductForm = async (req, res) =>
   return res.redirect("/web/product/add");
   }
 }
-export const updateProduct = async (req, res) =>
-{
-  const images = req.files.map(f => f.path);
-  const productId = req.params.id;
-  const toBeUpdateProductPayload={...req.body,images}
+export const updateProduct = async (req, res) => {
   try {
-    const updateProduct = await Product.findByIdAndUpdate(productId, toBeUpdateProductPayload)
-    if (updateProduct) {
-      req.flash("success", "Product updated successfully!");
+    const productId = req.params.id;
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      req.flash("error", "Product not found");
       return res.redirect("/web/products");
     }
-    
+
+    const newImages = req.files?.map(f => ({
+      url: f.path,
+      public_id: f.filename
+    })) || [];
+
+    const images = [...product.images, ...newImages];
+
+    const updatePayload = {
+      name: req.body.name,
+      price: req.body.price,
+      description: req.body.description,
+      images
+    };
+
+    await Product.findByIdAndUpdate(productId, updatePayload, {
+      runValidators: true
+    });
+
+    req.flash("success", "Product updated successfully!");
+    return res.redirect("/web/products");
+
   } catch (error) {
-    console.log(error)
+    console.error("UPDATE PRODUCT ERROR:", error);
     req.flash("error", "Something went wrong");
-    return;
+    return res.redirect("back");
   }
-  
-}
+};
+
 export const deleteProduct = async (req, res) => {
   const productId = req.params.id;
   const redirectUrl = req.get("referer") || "/web/products";
@@ -257,4 +286,114 @@ export const renderRecoverPage = async(req,res) =>
     return res.end();
   }
 }
+export const deteleSingleImageFromAProduct = async(req,res) =>
+{
+  const { productId } = req.params
+  const { imageId } =req.body
+  console.log({ productId: productId, imageId: imageId })
+  try {
+    let product = await Product.findById(productId)
+    const remainingProducImages = product.images.filter(image => image.public_id != imageId)
+    product.images = remainingProducImages;
+    await Product.findByIdAndUpdate(productId,product)
+    await cloudinary.uploader.destroy(imageId)
+    req.flash("success", "image deleted");
+    return res.status(200).send("the image has successfully deleted")
+  } catch (err) {
+    console.error(err);
+    return res.status(400).send({msg:"something went wrong",error:err})
+   }
+}
+
+export const exportProductsAsCsv = (req,res) =>
+{
+  const products = req.body;
+  try {
+      const formatted = products.map(p => ({
+      name: p.name,
+      price: p.price,
+      desc: p.desc,
+      brand: p.brand,
+      category: p.category,
+      size: p.size,
+      stock: p.stock,
+      color: p.color,
+      status: p.status,
+      images: JSON.stringify(p.images || []), 
+      isDeleted: p.isDeleted
+  }));
+  const parser = new Parser({ fields: Object.keys(formatted[0]) })
+  const csvData = parser.parse(formatted)
+  res.header("Content-Type", "text/csv");
+    res.attachment(`products-${Date.now()}.csv`);
+    console.log(csvData)
+    return res.send(csvData);
+    
+  }catch(err){
+    console.log(err)
+    res.status(500).send("server error! generating csv")
+  }
+
+}
+
+
+export const importProductFromCsv = async (req, res) => {
+
+  const filePath = req.file.path;
+  const newProductsPayload = [];
+
+  createReadStream(filePath)
+    .pipe(csvParser())
+
+    .on("data", (data) => {
+
+      let images = [];
+      try {
+        if (data.images) {
+          images = JSON.parse(data.images);
+        }
+      } catch {
+        images = [];
+      }
+
+      newProductsPayload.push({
+        name: data.name,
+        price: Number(data.price),
+        desc: data.desc,
+        brand: data.brand,
+        category: data.category,
+        size: data.size,
+        stock: Number(data.stock),
+        color: data.color,
+        status: (data.status || "active").toLowerCase(),
+        images,
+        isDeleted: data.isDeleted === "true"
+      });
+
+    })
+
+    .on("end", async () => {
+      try {
+        await Product.insertMany(newProductsPayload);
+
+        await unlink(filePath);
+
+        req.flash("success", "Products imported successfully");
+        return res.redirect("/web/products");
+
+      } catch (err) {
+        console.error(err);
+
+        req.flash("error", "CSV import failed");
+        return res.status(500).send("CSV import failed");
+      }
+    })
+
+    .on("error", (err) => {
+      console.error(err);
+      return res.status(400).send("Invalid CSV file");
+    });
+
+};
+
 

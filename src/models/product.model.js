@@ -18,10 +18,15 @@ const schema = new mongoose.Schema(
     stock: { type: Number, required: true },
     color: { type: String, required: true },
     status: { type: String, enum: PRODUCT_STATUS, default: "active" },
-    images: {
-      type: [String],
-      default:"https://res.cloudinary.com/dm6sdxom1/image/upload/v1769963494/shirt_btgyhg.png"
-    },
+    images: [
+      { 
+        url: {
+          type: String,
+          default:"https://res.cloudinary.com/dm6sdxom1/image/upload/v1769963494/shirt_btgyhg.png"
+        },
+        public_id: String
+      }
+    ],
     isDeleted: { type: Boolean, default: false },
 
     searchTokens: {

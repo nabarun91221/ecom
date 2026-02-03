@@ -13,6 +13,7 @@
 
 <body class="bg-light">
     <%- include('layouts/nav.ejs') %>
+    <%- include('partials/loading-overlay.ejs') %>
 
     <div class="container-fluid px-3 px-lg-4 mt-3">
         <div class="row">
@@ -49,6 +50,7 @@
 
                         <!-- Grid Density Toggle -->
                         <div class="btn-group btn-group-sm" role="group">
+
                             <button type="button" class="btn btn-outline-secondary" onclick="setGrid('dense')"
                                 title="Compact view">
                                 <i class="bi bi-grid-3x3-gap"></i>
@@ -57,7 +59,19 @@
                                 title="Normal view">
                                 <i class="bi bi-grid"></i>
                             </button>
+
                         </div>
+                        <button class="btn btn-primary mr-2" id="export-csv-btn"
+                            data-products='<%- JSON.stringify(products) %>'>
+                            <i class="bi bi-cloud-download" id="down-logo"></i>
+                            Export CSV
+
+                        </button>
+                        <button class="btn btn-primary mr-2 d-none" id="exporting-csv-btn">
+                            <span class="spinner-border spinner-border-sm ms-2" id="spinner"></span>
+                            Exporting...
+                        </button>
+
 
                     </div>
                 </div>
@@ -199,6 +213,54 @@
 
 </body>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+
+    document.getElementById("export-csv-btn").addEventListener("click", async function (e) {
+        const products = JSON.parse(e.target.dataset.products)
+        e.target.classList.add("d-none")
+        document.getElementById("exporting-csv-btn").classList.remove("d-none")
+        const res = await fetch("/web/products/generate-csv", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(products),
+        })
+        if (res.ok)
+        {
+            e.target.classList.remove("d-none")
+            document.getElementById("exporting-csv-btn").classList.add("d-none")
+        }
+
+        else
+        {
+            alert("something went wrong exporting csv")
+            e.target.classList.remove("d-none")
+            document.getElementById("exporting-csv-btn").classList.add("d-none")
+        }
+        // 🔽 convert to blob
+        const blob = await res.blob();
+
+        // 🔽 create download
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "products.csv";
+        a.click();
+
+        window.URL.revokeObjectURL(url);
+    })
+    function showLoader() {
+        document.getElementById("loadingOverlay")
+            .classList.remove("d-none");
+    }
+
+    function hideLoader() {
+        document.getElementById("loadingOverlay")
+            .classList.add("d-none");
+    }
+    document.querySelectorAll("form").forEach(form => {
+        form.addEventListener("submit", showLoader);
+    });
+</script>
 
 
 </html>
