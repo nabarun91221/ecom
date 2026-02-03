@@ -57,4 +57,17 @@ schema.pre("findOneAndUpdate", async function () {
   }
 });
 
+
+schema.pre("insertMany", async function (docs) {
+  if (!Array.isArray(docs)) return;
+
+  for (const doc of docs) {
+    if (doc?.name) {
+      doc.searchTokens = generateNgrams(doc.name);
+    }
+  }
+});
+
+
+
 export default mongoose.model("Product", schema);
