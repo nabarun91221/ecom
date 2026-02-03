@@ -25,7 +25,7 @@ const schema = new mongoose.Schema(
           default:"https://res.cloudinary.com/dm6sdxom1/image/upload/v1769963494/shirt_btgyhg.png"
         },
         public_id: String
-      }
+      },
     ],
     isDeleted: { type: Boolean, default: false },
 
