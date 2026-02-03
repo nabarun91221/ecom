@@ -13,6 +13,7 @@
 
 <body class="bg-light min-vh-100 d-flex flex-column">
   <%- include('layouts/nav.ejs') %>
+  <%- include('partials/loading-overlay.ejs') %>
 
   <div class="container mt-5">
 
@@ -231,6 +232,18 @@
         }
         window.location.reload();
       });
+    function showLoader() {
+      document.getElementById("loadingOverlay")
+        .classList.remove("d-none");
+    }
+
+    function hideLoader() {
+      document.getElementById("loadingOverlay")
+        .classList.add("d-none");
+    }
+    document.querySelectorAll("form").forEach(form => {
+      form.addEventListener("submit", showLoader);
+    });
   </script>
 
 
