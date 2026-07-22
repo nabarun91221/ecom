@@ -9,6 +9,10 @@ import session from "express-session";
 import flash from "connect-flash"
 import { options } from "./src/configs/session.config.js";
 import productModel from "./src/models/product.model.js";
+import User from "./src/models/user.model.js";
+import authRouter from "./src/routes/web/auth.route.js";
+import cartRouter from "./src/routes/web/cart.route.js";
+import adminRouter from "./src/routes/web/admin.route.js";
 
 configDotenv();
 
@@ -29,6 +33,15 @@ app.use(
   try {
     await connectMongoClient();
     await productModel.syncIndexes();
+    if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
+      const existing = await User.findOne({ email: process.env.ADMIN_EMAIL.toLowerCase() });
+      if (!existing) {
+        const admin = new User({ name: process.env.ADMIN_NAME || "Administrator", email: process.env.ADMIN_EMAIL, role: "ADMIN" });
+        admin.setPassword(process.env.ADMIN_PASSWORD);
+        await admin.save();
+        console.log("Initial administrator created");
+      }
+    }
     console.log("Indexes are synced")
   } catch (error) {
     console.error("Unable to connect to MongoDB or creating index", error);
@@ -44,6 +57,8 @@ app.use(flash())
 app.use((req, res, next) => {
   res.locals.success = req.flash("success");
   res.locals.error = req.flash("error");
+  res.locals.currentUser = req.session.user || null;
+  res.locals.currentPath = req.originalUrl;
   next();
 });
 app.use((err, req, res, next) => {
@@ -53,6 +68,9 @@ app.use((err, req, res, next) => {
 
 // routes
 app.use("/web", productRouter_web);
+app.use("/web/auth", authRouter);
+app.use("/web/cart", cartRouter);
+app.use("/web/admin", adminRouter);
 app.use("/api", productRouter_api);
 
 app.listen(PORT,"0.0.0.0", () =>

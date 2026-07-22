@@ -11,13 +11,12 @@
                 <!-- CATEGORY -->
                 <div class="mb-4">
                     <h6 class="fw-semibold">Category</h6>
-
-                    <% categories.forEach(c=>{ %>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="category" value="<%=c%>">
-                        <label class="form-check-label"><%=c%></label>
-                    </div>
-                    <% }) %>
+                    <select class="form-select" name="category">
+                        <option value="">All categories</option>
+                        <% categories.forEach(c => { %>
+                        <option value="<%= c._id %>"><%= c.name %></option>
+                        <% }) %>
+                    </select>
 
 
                 </div>
@@ -25,16 +24,12 @@
                 <!-- BRAND -->
                 <div class="mb-4">
                     <h6 class="fw-semibold">Brand</h6>
-                    <% brands.forEach(brand => { %>
-                    <div class="form-check">
-
-                        <input class="form-check-input" type="checkbox" name="brand" value="<%=brand%>">
-                        <label class="form-check-label">
-                            <%=brand%>
-                        </label>
-
-                    </div>
-                    <% }) %>
+                    <select class="form-select" name="brand">
+                        <option value="">All brands</option>
+                        <% brands.forEach(brand => { %>
+                        <option value="<%= brand._id %>"><%= brand.name %></option>
+                        <% }) %>
+                    </select>
 
 
                 </div>
@@ -64,7 +59,7 @@
                     <% }) %>
                 </div>
 
-                <!-- STATUS -->
+                <% if (currentUser?.role === 'ADMIN') { %><!-- STATUS -->
                 <div class="mb-4">
                     <h6 class="fw-semibold">Status</h6>
 
@@ -73,6 +68,7 @@
                         <option value="inactive">Inactive</option>
                     </select>
                 </div>
+                <% } %>
 
                 <!-- ACTIONS -->
                 <div class="d-grid gap-2">
@@ -88,11 +84,11 @@
             </form>
 
         </div>
-        <form action="/web/products/recover" class="w-100" method="GET">
+        <% if (currentUser?.role === 'ADMIN') { %><form action="/web/products/recover" class="w-100" method="GET">
             <button type="submit" class="btn btn-secondary btn-lr w-100">
                 <i class="bi bi-trash me-1"></i> Recover
             </button>
-        </form>
+        </form><% } %>
 
         <style>
             /* Sidebar container (column) */

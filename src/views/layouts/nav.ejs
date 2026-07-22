@@ -1,15 +1,19 @@
 <nav class="navbar navbar-expand-lg" style="background-color: #e3f0fd;">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#">ECOM</a>
+    <a class="navbar-brand" href="/web/products">ECOM</a>
 
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
       <ul class="navbar-nav me-auto">
         <li class="nav-item">
           <a class="nav-link active" href="/web/products">Home</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/web/product/add">Add product</a>
-        </li>
+        <% if (currentUser?.role === 'ADMIN') { %>
+          <li class="nav-item"><a class="nav-link" href="/web/admin/products">Admin products</a></li>
+          <% if (currentPath !== '/web/admin/products') { %>
+            <li class="nav-item"><a class="nav-link" href="/web/admin/categories">Categories</a></li>
+            <li class="nav-item"><a class="nav-link" href="/web/admin/brands">Brands</a></li>
+          <% } %>
+        <% } %>
       </ul>
     </div>
 
@@ -17,6 +21,16 @@
       <input class="form-control me-2" type="search" name="searchstring" placeholder="Search" />
       <button class="btn btn-outline-primary">Search</button>
     </form>
+    <div class="ms-3 d-flex align-items-center gap-2">
+      <% if (currentUser) { %>
+        <% if (currentUser.role === 'USER') { %><a class="btn btn-outline-primary btn-sm" href="/web/cart">Cart</a><% } %>
+        <span class="small"><%= currentUser.name %></span>
+        <form action="/web/auth/logout" method="POST"><button class="btn btn-sm btn-outline-secondary">Logout</button></form>
+      <% } else { %>
+        <a href="/web/auth/login" class="btn btn-outline-primary btn-sm">Login</a>
+        <a href="/web/auth/signup" class="btn btn-primary btn-sm">Sign up</a>
+      <% } %>
+    </div>
 
   </div>
 

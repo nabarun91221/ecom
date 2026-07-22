@@ -1,0 +1,10 @@
+import { Router } from "express";
+import { requireAdmin } from "../../middlewares/auth.middleware.js";
+import { catalogPage, createCatalog, hardDeleteCatalog, toggleCatalogDelete, updateCatalog } from "../../controllers/web/admin.controller.js";
+import { renderProducts, renderProductFormToAdd, renderProductFormToEdit, submitProductForm, updateProduct, deleteProduct, hardDeleteProduct, recoverProduct, exportProductsAsCsv, importProductFromCsv } from "../../controllers/web/product.controller.js";
+import upload from "../../utils/multer.js";
+import { upload as uploadCsv } from "../../utils/multer-csv.js";
+const router = Router(); router.use(requireAdmin);
+router.get("/products", renderProducts).get("/products/add", renderProductFormToAdd).post("/products/add", upload.array("images", 5), submitProductForm).get("/products/:id/edit", renderProductFormToEdit).post("/products/:id/edit", upload.array("images", 5), updateProduct).post("/products/:id/delete", deleteProduct).post("/products/:id/recover", recoverProduct).post("/products/:id/hard-delete", hardDeleteProduct).post("/products/export", exportProductsAsCsv).post("/products/import", uploadCsv.single("csv"), importProductFromCsv);
+router.get("/:type", catalogPage).post("/:type", createCatalog).post("/:type/:id", updateCatalog).post("/:type/:id/delete", toggleCatalogDelete).post("/:type/:id/hard-delete", hardDeleteCatalog);
+export default router;

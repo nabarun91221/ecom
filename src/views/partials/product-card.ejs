@@ -65,12 +65,12 @@
             <div class="small text-muted mb-2">
                 <span class="me-3">
                     <i class="bi bi-tag-fill me-1"></i>
-                    <%= product.brand %>
+                    <%= product.brand?.name || 'Unknown brand' %>
                 </span>
 
                 <span>
                     <i class="bi bi-box-seam me-1"></i>
-                    <%= product.category %>
+                    <%= product.category?.name || 'Unknown category' %>
                 </span>
             </div>
 
@@ -105,6 +105,8 @@
 
             <!-- Actions -->
             <div class="mt-auto d-flex gap-1">
+                <% if (currentUser?.role === 'USER') { %><form action="/web/cart/add/<%= product._id %>" method="POST" class="w-100"><button class="btn btn-sm btn-primary w-100">Add to cart</button></form><% } %>
+                <% if (currentUser?.role === 'ADMIN') { %>
                 <a href="/web/product/edit/<%= product._id %>" class="btn btn-sm btn-outline-dark w-100">
                     Edit
                 </a>
@@ -115,6 +117,7 @@
                         Delete
                     </button>
                 </form>
+                <% } %>
                 <% } %>
             </div>
 

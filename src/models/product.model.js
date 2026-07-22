@@ -1,8 +1,4 @@
-import {
-  PRODUCT_STATUS,
-  PRODUCT_SIZES,
-  PRODUCT_CATEGORIES
-} from "../constants/product.enums.js";
+import { PRODUCT_STATUS } from "../constants/product.enums.js";
 
 import mongoose from "mongoose";
 import { generateNgrams } from "../utils/generateNgrams.js";
@@ -12,8 +8,8 @@ const schema = new mongoose.Schema(
     name: { type: String, required: true },
     price: { type: Number, required: true },
     desc: { type: String, required: true },
-    brand: { type: String, required: true },
-    category: { type: String, enum: PRODUCT_CATEGORIES, required: true },
+    brand: { type: mongoose.Schema.Types.ObjectId, ref: "Brand", required: true },
+    category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
     size: { type: String, required: true },
     stock: { type: Number, required: true },
     color: { type: String, required: true },
@@ -39,7 +35,7 @@ const schema = new mongoose.Schema(
 
 
 schema.pre("save", async function () {
-  const text = this.name
+  const text = this.name;
   this.searchTokens = generateNgrams(text);
 });
 
@@ -49,7 +45,7 @@ schema.pre("findOneAndUpdate", async function () {
   const data = update.$set || update;
 
   if (data.name) {
-    const text = this.name;
+    const text = data.name;
     update.$set = {
       ...update.$set,
       searchTokens: generateNgrams(text)

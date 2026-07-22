@@ -1,5 +1,7 @@
 import { error } from "node:console";
-import { PRODUCT_CATEGORIES,PRODUCT_SIZES,PRODUCT_BRAND } from "../../constants/product.enums.js";
+import { PRODUCT_SIZES } from "../../constants/product.enums.js";
+import Category from "../../models/category.model.js";
+import Brand from "../../models/brand.model.js";
 import Product from "../../models/product.model.js";
 import cloudinary from "../../configs/clodinery.config.js";
 import { Parser } from "json2csv";
@@ -15,8 +17,12 @@ export const renderProducts = async(req, res) =>
       latest: { createdAt: -1 }
     };
   try {
-    const products = await Product.find({ isDeleted: false }).sort(sortTypes[sortType])
-    res.render("products.view.ejs",{ products, categories:PRODUCT_CATEGORIES,sizes:PRODUCT_SIZES,brands:PRODUCT_BRAND })
+    const productFilter = req.session.user?.role === "ADMIN" ? { isDeleted: false } : { isDeleted: false, status: "active" };
+    const [products, categories, brands] = await Promise.all([
+      Product.find(productFilter).populate("category brand").sort(sortTypes[sortType]),
+      Category.find({ isDeleted: false, status: "active" }).sort("name"), Brand.find({ isDeleted: false, status: "active" }).sort("name")
+    ]);
+    res.render("products.view.ejs",{ products, categories, sizes:PRODUCT_SIZES,brands })
   } catch {
     console.log(error);
     return res.end();
@@ -25,16 +31,16 @@ export const renderProducts = async(req, res) =>
 };
 
 export const renderProductFormToAdd = (req, res) => {
-  res.render("productForm.view.ejs", { product: null, categories:PRODUCT_CATEGORIES,sizes:PRODUCT_SIZES,brands:PRODUCT_BRAND  });
+  Promise.all([Category.find({isDeleted:false,status:"active"}), Brand.find({isDeleted:false,status:"active"})]).then(([categories,brands]) => res.render("productForm.view.ejs", { product: null, categories, sizes:PRODUCT_SIZES, brands }));
 };
 
 export const renderProductFormToEdit = async(req, res) =>
 {
   const productId = req.params.id;
   try {
-    const product = await Product.findById(productId);
+    const [product, categories, brands] = await Promise.all([Product.findById(productId), Category.find({isDeleted:false,status:"active"}), Brand.find({isDeleted:false,status:"active"})]);
     if (product) {
-      res.render("productForm.view.ejs", { product, categories:PRODUCT_CATEGORIES,sizes:PRODUCT_SIZES,brands:PRODUCT_BRAND });
+      res.render("productForm.view.ejs", { product, categories, sizes:PRODUCT_SIZES, brands });
     }
     
   } catch (error) {
@@ -94,7 +100,14 @@ export const updateProduct = async (req, res) => {
     const updatePayload = {
       name: req.body.name,
       price: req.body.price,
-      description: req.body.description,
+      desc: req.body.desc,
+      brand: req.body.brand,
+      category: req.body.category,
+      size: req.body.size,
+      color: req.body.color,
+      stock: req.body.stock,
+      price: req.body.price,
+      status: req.body.status,
       images
     };
 
@@ -213,6 +226,11 @@ export const renderFilteredProducts = async (req, res) => {
     delete queryObj.sort;
 
     const filter = { ...queryObj };
+    for (const key of ["category", "brand", "size", "status"]) {
+      if (!filter[key]) delete filter[key];
+    }
+    if (Array.isArray(filter.category)) filter.category = { $in: filter.category };
+    if (Array.isArray(filter.brand)) filter.brand = { $in: filter.brand };
 
     if (minPrice || maxPrice) {
       filter.price = {};
@@ -222,20 +240,21 @@ export const renderFilteredProducts = async (req, res) => {
     }
 
     filter.isDeleted = false;
+    if (req.session.user?.role !== "ADMIN") filter.status = "active";
     const sortTypes = {
       price_asc: { price: 1 },
       price_desc: { price: -1 },
       latest: { createdAt: -1 }
     };
 
-    const products = await Product.find(filter).sort(sortTypes[sortType])
+    const [products, categories, brands] = await Promise.all([Product.find(filter).populate("category brand").sort(sortTypes[sortType]), Category.find({isDeleted:false,status:"active"}), Brand.find({isDeleted:false,status:"active"})]);
     console.log(sortTypes[sortType],products)
 
     return res.render("products.view.ejs", {
       products,
-      categories: PRODUCT_CATEGORIES,
+      categories,
       sizes: PRODUCT_SIZES,
-      brands: PRODUCT_BRAND
+      brands
     });
 
   } catch (error) {
@@ -256,13 +275,14 @@ export const renderSearchedProducts = async (req, res) =>
   try {
     const searchedProducts = await Product.find({
       searchTokens: searchstring,
-      isDeleted: false
-    }).sort(sortTypes[sortType]);
+      isDeleted: false, status: "active"
+    }).populate("category brand").sort(sortTypes[sortType]);
+    const [categories, brands] = await Promise.all([Category.find({isDeleted:false,status:"active"}), Brand.find({isDeleted:false,status:"active"})]);
     return res.render("products.view.ejs", {
       products: searchedProducts,
-      categories: PRODUCT_CATEGORIES,
+      categories,
       sizes: PRODUCT_SIZES,
-      brands: PRODUCT_BRAND
+      brands
     })
   } catch (error) {
     console.log(error)
@@ -374,12 +394,19 @@ export const importProductFromCsv = async (req, res) => {
 
     .on("end", async () => {
       try {
+        const [categories, brands] = await Promise.all([Category.find(), Brand.find()]);
+        const categoryIds = new Map(categories.map(c => [c.name.toLowerCase(), c._id]));
+        const brandIds = new Map(brands.map(b => [b.name.toLowerCase(), b._id]));
+        for (const product of newProductsPayload) {
+          product.category = categoryIds.get(String(product.category).toLowerCase()) || product.category;
+          product.brand = brandIds.get(String(product.brand).toLowerCase()) || product.brand;
+        }
         await Product.insertMany(newProductsPayload);
 
         await unlink(filePath);
 
         req.flash("success", "Products imported successfully");
-        return res.redirect("/web/products");
+        return res.redirect("/web/product/add");
 
       } catch (err) {
         console.error(err);
@@ -395,5 +422,3 @@ export const importProductFromCsv = async (req, res) => {
     });
 
 };
-
-

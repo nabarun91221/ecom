@@ -49,11 +49,13 @@
       <a href="/web/products" class="btn btn-outline-secondary btn-sm">Back</a>
 
     </div>
-    <div class="mb-4">
+    <% if (!product) { %><div class="mb-4">
       <button class="btn btn-outline-primary " data-bs-toggle="modal" data-bs-target="#csvUploadModal">
         Import CSV
       </button>
-    </div>
+      <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#categoryModal">Create category</button>
+      <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#brandModal">Create brand</button>
+    </div><% } %>
 
 
 
@@ -90,8 +92,8 @@
             <select name="brand" class="form-select" required>
               <option value="">Select Brand</option>
               <% brands.forEach(brand => { %>
-              <option value="<%= brand %>" <%= product?.brand === brand ? 'selected' : '' %>>
-                <%= brand %>
+              <option value="<%= brand._id %>" <%= String(product?.brand) === String(brand._id) ? 'selected' : '' %>>
+                <%= brand.name %>
               </option>
               <% }) %>
             </select>
@@ -101,8 +103,8 @@
             <select name="category" class="form-select" required>
               <option value="">Select Category</option>
               <% categories.forEach(category => { %>
-              <option value="<%= category %>" <%= product?.category === category ? 'selected' : '' %>>
-                <%= category %>
+              <option value="<%= category._id %>" <%= String(product?.category) === String(category._id) ? 'selected' : '' %>>
+                <%= category.name %>
               </option>
               <% }) %>
             </select>
@@ -274,6 +276,22 @@
 
       </div>
     </div>
+  </div>
+
+  <div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><form action="/web/admin/categories" method="POST">
+      <div class="modal-header"><h5 class="modal-title">Create category</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body"><input type="hidden" name="returnTo" value="/web/product/add"><label class="form-label">Category name</label><input class="form-control" name="name" required><label class="form-label mt-3">Status</label><select name="status" class="form-select"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+      <div class="modal-footer"><button class="btn btn-primary">Create category</button></div>
+    </form></div></div>
+  </div>
+
+  <div class="modal fade" id="brandModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><form action="/web/admin/brands" method="POST">
+      <div class="modal-header"><h5 class="modal-title">Create brand</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body"><input type="hidden" name="returnTo" value="/web/product/add"><label class="form-label">Brand name</label><input class="form-control" name="name" required><label class="form-label mt-3">Status</label><select name="status" class="form-select"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+      <div class="modal-footer"><button class="btn btn-primary">Create brand</button></div>
+    </form></div></div>
   </div>
 
   <!-- SUCCESS TOAST -->

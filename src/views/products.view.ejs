@@ -23,7 +23,7 @@
                 <%- include('partials/sidebar.ejs') %>
             </aside>
 
-            <main class="col-lg-9 col-md-8">
+            <main class="col-lg-9 col-md-8 ps-lg-4 ps-xl-5">
                 <!-- Header / Controls -->
                 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
 
@@ -61,6 +61,8 @@
                             </button>
 
                         </div>
+                        <% if (currentUser?.role === 'ADMIN') { %>
+                        <a class="btn btn-primary mr-2" href="/web/product/add">Add product</a>
                         <button class="btn btn-primary mr-2" id="export-csv-btn"
                             data-products='<%- JSON.stringify(products) %>'>
                             <i class="bi bi-cloud-download" id="down-logo"></i>
@@ -71,6 +73,7 @@
                             <span class="spinner-border spinner-border-sm ms-2" id="spinner"></span>
                             Exporting...
                         </button>
+                        <% } %>
 
 
                     </div>
@@ -215,7 +218,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 
-    document.getElementById("export-csv-btn").addEventListener("click", async function (e) {
+    const exportButton = document.getElementById("export-csv-btn");
+    exportButton?.addEventListener("click", async function (e) {
         const products = JSON.parse(e.target.dataset.products)
         e.target.classList.add("d-none")
         document.getElementById("exporting-csv-btn").classList.remove("d-none")
